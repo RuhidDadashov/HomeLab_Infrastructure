@@ -29,3 +29,45 @@ sudo nmcli device modify ens33 ipv4.gateway 172.22.218.2
 sudo nmcli device modify ens33 ipv4.dns 172.22.218.10
 sudo nmcli device modify ens33 ipv4.method manual
 sudo nmcli device up ens33
+```
+
+### Step 2: Install Required Middleware
+Install the necessary packages to handle Kerberos authentication and LDAP integration.
+```bash
+sudo dnf install -y realmd sssd adcli samba-common-tools oddjob oddjob-mkhomedir
+```
+
+### Step 3: Discover and Join the Domain
+Verify that the domain is reachable, then join the system using a Domain Administrator account.
+
+```bash
+# Verify domain visibility
+realm discover Rdadash.local
+
+# Join the domain (Prompts for Administrator password)
+sudo realm join -U Administrator Rdadash.local
+```
+
+### Step 4: Automate User Session Provisioning
+Configure the system to automatically create a local home directory (/home/username@domain) the first time an Active Directory user logs in.
+
+```bash
+sudo authselect select sssd with-mkhomedir --force
+sudo systemctl enable --now sssd
+```
+
+## 🧪 Verification
+To confirm a successful integration, run the following commands:
+### Check Domain Status:
+
+```bash
+realm list
+# Expected output should include: "configured: kerberos-member"
+```
+
+### Test Identity Synchronization:
+```bash
+id username@rdadash.local
+# Expected output should return the user's UID and AD groups.
+```
+
